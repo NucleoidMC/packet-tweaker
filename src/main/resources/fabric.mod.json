@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "packet_tweaker",
+  "version": "${version}",
+  "name": "Packet Tweaker",
+  "description": "Library to assist with transforming packets before they get sent to the client",
+  "authors": ["Gegy"],
+  "license": "LGPLv3",
+  "environment": "*",
+  "entrypoints": {
+    "main": []
+  },
+  "mixins": ["packettweaker.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.9.1",
+    "minecraft": "1.16.x"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "xyz.nucleoid.packettweaker.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "ClientConnectionMixin",
+    "PacketDecoderMixin",
+    "PacketEncoderMixin",
+    "ServerNetworkIoAcceptorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
