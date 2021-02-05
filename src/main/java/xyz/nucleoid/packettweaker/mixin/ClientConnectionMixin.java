@@ -1,10 +1,7 @@
 package xyz.nucleoid.packettweaker.mixin;
 
 import io.netty.channel.Channel;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.Packet;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.*;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import org.jetbrains.annotations.Nullable;
@@ -59,15 +56,27 @@ public abstract class ClientConnectionMixin implements ClientConnectionWithHandl
             return packet;
         }
 
+        NetworkState protocol = this.channel.attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
+        Integer packetId = protocol.getPacketId(this.side, packet);
+        if (packetId == null) {
+            return packet;
+        }
+
         PacketByteBuf buffer = new PacketByteBuf(this.channel.alloc().buffer());
         try {
             PacketContext.writeWithContext(packet, buffer, this.networkHandler);
             buffer.resetReaderIndex();
-            packet.read(buffer);
+
+            Packet<?> rewrittenPacket = protocol.getPacketHandler(this.side, packetId);
+            if (rewrittenPacket == null) {
+                return packet;
+            }
+
+            rewrittenPacket.read(buffer);
+
+            return rewrittenPacket;
         } finally {
             buffer.release();
         }
-
-        return packet;
     }
 }
