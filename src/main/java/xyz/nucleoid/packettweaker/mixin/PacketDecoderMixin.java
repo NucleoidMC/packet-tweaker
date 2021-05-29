@@ -1,16 +1,18 @@
 package xyz.nucleoid.packettweaker.mixin;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.*;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.nucleoid.packettweaker.ClientConnectionWithHandler;
 import xyz.nucleoid.packettweaker.ConnectionHolder;
 import xyz.nucleoid.packettweaker.PacketContext;
 
-import java.io.IOException;
+import java.util.List;
 
 @Mixin(DecoderHandler.class)
 public class PacketDecoderMixin implements ConnectionHolder {
@@ -22,14 +24,15 @@ public class PacketDecoderMixin implements ConnectionHolder {
         this.connection = connection;
     }
 
-    @Redirect(method = "decode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;read(Lnet/minecraft/network/PacketByteBuf;)V"))
-    private void writePacket(Packet<?> packet, PacketByteBuf buf) throws IOException {
-        ClientConnection connection = this.connection;
-        if (connection != null) {
-            ServerPlayNetworkHandler networkHandler = ((ClientConnectionWithHandler) connection).getNetworkHandler();
-            PacketContext.readWithContext(packet, buf, networkHandler);
-        } else {
-            packet.read(buf);
+    @Inject(method = "decode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkState;getPacketHandler(Lnet/minecraft/network/NetworkSide;ILnet/minecraft/network/PacketByteBuf;)Lnet/minecraft/network/Packet;", shift = At.Shift.BEFORE))
+    private void setPacketContext(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list, CallbackInfo ci) {
+        if (this.connection != null) {
+            PacketContext.setReadContext(((ClientConnectionWithHandler) connection).getNetworkHandler());
         }
+    }
+
+    @Inject(method = "decode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkState;getPacketHandler(Lnet/minecraft/network/NetworkSide;ILnet/minecraft/network/PacketByteBuf;)Lnet/minecraft/network/Packet;", shift = At.Shift.AFTER))
+    private void clearPacketContext(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list, CallbackInfo ci) {
+        PacketContext.clearReadContext();
     }
 }

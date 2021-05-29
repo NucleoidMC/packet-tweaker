@@ -32,19 +32,18 @@ public final class PacketContext {
         }
     }
 
-    public static void readWithContext(Packet<?> packet, PacketByteBuf buffer, @Nullable ServerPlayNetworkHandler networkHandler) throws IOException {
+    public static void setReadContext(@Nullable ServerPlayNetworkHandler networkHandler) {
         if (networkHandler == null) {
-            packet.read(buffer);
             return;
         }
 
         PacketContext context = PacketContext.get();
-        try {
-            context.target = networkHandler.player;
-            packet.read(buffer);
-        } finally {
-            context.target = null;
-        }
+        context.target = networkHandler.player;
+    }
+
+    public static void clearReadContext() {
+        PacketContext context = PacketContext.get();
+        context.target = null;
     }
 
     @Nullable
