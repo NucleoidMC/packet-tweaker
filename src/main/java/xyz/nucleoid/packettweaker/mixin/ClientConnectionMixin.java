@@ -56,7 +56,7 @@ public abstract class ClientConnectionMixin implements ClientConnectionWithHandl
             return packet;
         }
 
-        NetworkState protocol = this.channel.attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
+        NetworkState protocol = this.channel.attr(ClientConnection.PROTOCOL_ATTRIBUTE_KEY).get();
         Integer packetId = protocol.getPacketId(this.side, packet);
         if (packetId == null) {
             return packet;
@@ -67,12 +67,10 @@ public abstract class ClientConnectionMixin implements ClientConnectionWithHandl
             PacketContext.writeWithContext(packet, buffer, this.networkHandler);
             buffer.resetReaderIndex();
 
-            Packet<?> rewrittenPacket = protocol.getPacketHandler(this.side, packetId);
+            Packet<?> rewrittenPacket = protocol.getPacketHandler(this.side, packetId, buffer);
             if (rewrittenPacket == null) {
                 return packet;
             }
-
-            rewrittenPacket.read(buffer);
 
             return rewrittenPacket;
         } finally {
