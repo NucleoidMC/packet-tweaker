@@ -11,7 +11,7 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
-  maven { url = "https://jitpack.io/" }
+  maven { url = "https://maven.gegy.dev/" }
 }
 
 dependencies {
@@ -19,7 +19,7 @@ dependencies {
   mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
   modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-  modRuntime("com.github.SuperCoder7979:databreaker:0.2.6") {
+  modRuntime("supercoder79:databreaker:0.2.7") {
     exclude module: "fabric-loader"
   }
 }
@@ -32,17 +32,19 @@ processResources {
   }
 }
 
-tasks.withType(JavaCompile) {
-  options.encoding = "UTF-8"
+tasks.withType(JavaCompile).configureEach {
+  it.options.encoding = "UTF-8"
+  it.options.release = 16
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = "sources"
-  from sourceSets.main.allSource
+java {
+  withSourcesJar()
 }
 
 jar {
-  from "LICENSE"
+  from("LICENSE") {
+    rename { "${it}_${project.archivesBaseName}"}
+  }
 }
 
 def env = System.getenv()

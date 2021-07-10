@@ -13,13 +13,12 @@
   "mixins": ["packettweaker.mixins.json"],
   "custom": {
     "modmenu": {
-      "badges": [
-        "library"
-      ]
+      "badges": ["library"]
     }
   },
   "depends": {
     "fabricloader": ">=0.9.1",
-    "minecraft": "1.17.x"
+    "minecraft": "1.17.x",
+    "java": ">=16"
   }
 }
