@@ -1,5 +1,5 @@
 plugins {
-  id 'fabric-loom' version '0.8-SNAPSHOT'
+  id 'fabric-loom' version '0.10-SNAPSHOT'
   id 'maven-publish'
 }
 
@@ -11,17 +11,13 @@ version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 repositories {
-  maven { url = "https://maven.gegy.dev/" }
+  maven { url = "https://maven.nucleoid.xyz/" }
 }
 
 dependencies {
   minecraft "com.mojang:minecraft:${project.minecraft_version}"
   mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
   modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-  modRuntime("supercoder79:databreaker:0.2.7") {
-    exclude module: "fabric-loader"
-  }
 }
 
 processResources {
