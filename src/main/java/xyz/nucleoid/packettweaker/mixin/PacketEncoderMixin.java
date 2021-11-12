@@ -25,7 +25,7 @@ public class PacketEncoderMixin implements ConnectionHolder {
         this.connection = connection;
     }
 
-    @Redirect(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;write(Lnet/minecraft/network/PacketByteBuf;)V"))
+    @Redirect(method = "encode*", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;write(Lnet/minecraft/network/PacketByteBuf;)V"))
     private void writePacket(Packet<?> packet, PacketByteBuf buf) throws IOException {
         ClientConnection connection = this.connection;
         if (connection != null) {
