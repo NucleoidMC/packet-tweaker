@@ -4,7 +4,7 @@
   "version": "${version}",
   "name": "Packet Tweaker",
   "description": "Library to assist with transforming packets before they get sent to the client",
-  "authors": ["Gegy"],
+  "authors": ["Gegy", "Patbox"],
   "license": "LGPLv3",
   "environment": "*",
   "entrypoints": {
@@ -18,7 +18,6 @@
   },
   "depends": {
     "fabricloader": ">=0.12.5",
-    "minecraft": "1.18.x",
-    "java": ">=16"
+    "java": ">=17"
   }
 }

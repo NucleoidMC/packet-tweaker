@@ -25,14 +25,14 @@ public class PacketDecoderMixin implements ConnectionHolder {
     }
 
     @Inject(method = "decode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkState;getPacketHandler(Lnet/minecraft/network/NetworkSide;ILnet/minecraft/network/PacketByteBuf;)Lnet/minecraft/network/Packet;", shift = At.Shift.BEFORE))
-    private void setPacketContext(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list, CallbackInfo ci) {
+    private void packetTweaker_setPacketContext(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list, CallbackInfo ci) {
         if (this.connection != null) {
-            PacketContext.setReadContext(((ClientConnectionWithHandler) connection).getNetworkHandler());
+            PacketContext.setContext(((ClientConnectionWithHandler) connection).getNetworkHandler());
         }
     }
 
     @Inject(method = "decode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkState;getPacketHandler(Lnet/minecraft/network/NetworkSide;ILnet/minecraft/network/PacketByteBuf;)Lnet/minecraft/network/Packet;", shift = At.Shift.AFTER))
-    private void clearPacketContext(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list, CallbackInfo ci) {
-        PacketContext.clearReadContext();
+    private void packetTweaker_clearPacketContext(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list, CallbackInfo ci) {
+        PacketContext.clearContext();
     }
 }

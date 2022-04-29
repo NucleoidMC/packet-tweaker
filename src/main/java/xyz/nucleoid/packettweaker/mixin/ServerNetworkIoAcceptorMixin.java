@@ -16,7 +16,7 @@ public class ServerNetworkIoAcceptorMixin {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;setPacketListener(Lnet/minecraft/network/listener/PacketListener;)V"),
             locals = LocalCapture.CAPTURE_FAILHARD
     )
-    private void initChannel(Channel channel, CallbackInfo ci, int rateLimit, ClientConnection connection) {
+    private void packetTweaker_initChannel(Channel channel, CallbackInfo ci, int rateLimit, ClientConnection connection) {
         ConnectionHolder encoder = (ConnectionHolder) channel.pipeline().get("encoder");
         encoder.setConnection(connection);
 

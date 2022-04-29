@@ -31,8 +31,10 @@ public final class PacketContext {
             context.target = null;
         }
     }
-
     public static void setReadContext(@Nullable ServerPlayNetworkHandler networkHandler) {
+        setContext(networkHandler);
+    }
+    public static void setContext(@Nullable ServerPlayNetworkHandler networkHandler) {
         if (networkHandler == null) {
             return;
         }
@@ -42,6 +44,10 @@ public final class PacketContext {
     }
 
     public static void clearReadContext() {
+        clearContext();
+    }
+
+    public static void clearContext() {
         PacketContext context = PacketContext.get();
         context.target = null;
     }
