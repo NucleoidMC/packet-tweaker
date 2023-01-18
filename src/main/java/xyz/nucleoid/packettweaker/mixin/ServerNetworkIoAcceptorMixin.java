@@ -1,6 +1,8 @@
 package xyz.nucleoid.packettweaker.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
 import net.minecraft.network.ClientConnection;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,10 +15,12 @@ import xyz.nucleoid.packettweaker.ConnectionHolder;
 public class ServerNetworkIoAcceptorMixin {
     @Inject(
             method = "initChannel(Lio/netty/channel/Channel;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;setPacketListener(Lnet/minecraft/network/listener/PacketListener;)V"),
-            locals = LocalCapture.CAPTURE_FAILHARD
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/network/ClientConnection;setPacketListener(Lnet/minecraft/network/listener/PacketListener;)V"
+            )
     )
-    private void packetTweaker_initChannel(Channel channel, CallbackInfo ci, int rateLimit, ClientConnection connection) {
+    private void packetTweaker_initChannel(Channel channel, CallbackInfo ci, @Local ClientConnection connection) {
         ConnectionHolder encoder = (ConnectionHolder) channel.pipeline().get("encoder");
         encoder.setConnection(connection);
 

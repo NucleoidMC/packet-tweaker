@@ -8,7 +8,9 @@
   "license": "LGPLv3",
   "environment": "*",
   "entrypoints": {
-    "main": []
+    "preLaunch": [
+      "com.llamalad7.mixinextras.MixinExtrasBootstrap::init"
+    ]
   },
   "mixins": ["packettweaker.mixins.json"],
   "custom": {
