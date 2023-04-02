@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import xyz.nucleoid.packettweaker.ClientConnectionWithHandler;
 import xyz.nucleoid.packettweaker.PacketContext;
-import xyz.nucleoid.packettweaker.ConnectionHolder;
+import xyz.nucleoid.packettweaker.PlayerProvidingPacketListener;
+import xyz.nucleoid.packettweaker.impl.ConnectionHolder;
 
 
 @Mixin(PacketEncoder.class)
@@ -28,7 +28,7 @@ public class PacketEncoderMixin implements ConnectionHolder {
     @Inject(method = "encode(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;Lio/netty/buffer/ByteBuf;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/Packet;write(Lnet/minecraft/network/PacketByteBuf;)V", shift = At.Shift.BEFORE))
     private void packetTweaker_setPacketContext(ChannelHandlerContext channelHandlerContext, Packet<?> packet, ByteBuf byteBuf, CallbackInfo ci) {
         if (this.connection != null) {
-            PacketContext.setContext(((ClientConnectionWithHandler) connection).getNetworkHandler());
+            PacketContext.setContext(PlayerProvidingPacketListener.getPlayer(connection.getPacketListener()));
         }
     }
 

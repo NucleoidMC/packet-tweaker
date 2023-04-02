@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import xyz.nucleoid.packettweaker.ConnectionHolder;
+import xyz.nucleoid.packettweaker.impl.ConnectionHolder;
 
 @Mixin(targets = "net/minecraft/server/ServerNetworkIo$1")
 public class ServerNetworkIoAcceptorMixin {

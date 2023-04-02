@@ -1,4 +1,4 @@
-package xyz.nucleoid.packettweaker;
+package xyz.nucleoid.packettweaker.impl;
 
 import net.minecraft.network.ClientConnection;
 
