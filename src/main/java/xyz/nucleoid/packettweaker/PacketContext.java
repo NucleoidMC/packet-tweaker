@@ -1,5 +1,9 @@
 package xyz.nucleoid.packettweaker;
 
+import com.mojang.authlib.GameProfile;
+import net.minecraft.class_8791;
+import net.minecraft.network.NetworkState;
+import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -12,45 +16,29 @@ import java.io.IOException;
 public final class PacketContext {
     private static final ThreadLocal<PacketContext> INSTANCE = ThreadLocal.withInitial(PacketContext::new);
 
-    private ServerPlayerEntity target;
+    private ContextProvidingPacketListener target = ContextProvidingPacketListener.EMPTY;
 
     public static PacketContext get() {
         return INSTANCE.get();
     }
 
-    public static void writeWithContext(Packet<?> packet, PacketByteBuf buffer, @Nullable ServerPlayNetworkHandler networkHandler) throws IOException {
+    public static void writeWithContext(Packet<?> packet, PacketByteBuf buffer, @Nullable PacketListener networkHandler) throws IOException {
         if (networkHandler == null) {
             packet.write(buffer);
             return;
         }
 
         PacketContext context = PacketContext.get();
-        try {
-            context.target = networkHandler.player;
-            packet.write(buffer);
-        } finally {
-            context.target = null;
-        }
+        context.target = (ContextProvidingPacketListener) networkHandler;
     }
-    @Deprecated
-    public static void setReadContext(@Nullable ServerPlayNetworkHandler networkHandler) {
-        setContext(networkHandler);
-    }
-
     @ApiStatus.Internal
-    public static void setContext(@Nullable ServerPlayNetworkHandler networkHandler) {
-        if (networkHandler == null) {
+    public static void setContext(@Nullable PacketListener listener) {
+        if (listener == null) {
             return;
         }
 
         PacketContext context = PacketContext.get();
-        context.target = networkHandler.player;
-    }
-
-    @ApiStatus.Internal
-    public static void setContext(@Nullable ServerPlayerEntity player) {
-        PacketContext context = PacketContext.get();
-        context.target = player;
+        context.target = (ContextProvidingPacketListener) listener;
     }
 
     public static void clearReadContext() {
@@ -59,11 +47,25 @@ public final class PacketContext {
 
     public static void clearContext() {
         PacketContext context = PacketContext.get();
-        context.target = null;
+        context.target = ContextProvidingPacketListener.EMPTY;
     }
 
     @Nullable
+    @Deprecated
     public ServerPlayerEntity getTarget() {
-        return this.target;
+        return this.getTargetPlayer();
+    }
+
+    @Nullable
+    public ServerPlayerEntity getTargetPlayer() {
+        return this.target.getPlayerForPacketTweaker();
+    }
+
+    public class_8791 getTargetSettings() {
+        return this.target.getClientSettingsForPacketTweaker();
+    }
+
+    public GameProfile getTargetGameProfile() {
+        return this.target.getGameProfileForPacketTweaker();
     }
 }

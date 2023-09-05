@@ -7,8 +7,9 @@
     "PacketDecoderMixin",
     "PacketEncoderMixin",
     "PacketListenerMixin",
-    "ServerPlayNetworkHandlerMixin",
-    "ServerNetworkIoAcceptorMixin"
+    "ServerConfigurationNetworkHandlerMixin",
+    "ServerNetworkIoAcceptorMixin",
+    "ServerPlayNetworkHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

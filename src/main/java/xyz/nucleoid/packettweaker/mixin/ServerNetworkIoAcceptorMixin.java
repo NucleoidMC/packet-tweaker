@@ -14,7 +14,7 @@ import xyz.nucleoid.packettweaker.impl.ConnectionHolder;
 public class ServerNetworkIoAcceptorMixin {
     @Inject(
             method = "initChannel(Lio/netty/channel/Channel;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;setPacketListener(Lnet/minecraft/network/listener/PacketListener;)V"),
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;setInitialPacketListener(Lnet/minecraft/network/listener/PacketListener;)V"),
             locals = LocalCapture.CAPTURE_FAILSOFT
     )
     private void packetTweaker_initChannel(Channel channel, CallbackInfo ci, ChannelPipeline channelPipeline, int rateLimit, ClientConnection connection) {
