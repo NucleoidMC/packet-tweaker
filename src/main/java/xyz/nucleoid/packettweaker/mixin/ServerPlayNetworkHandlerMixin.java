@@ -1,8 +1,8 @@
 package xyz.nucleoid.packettweaker.mixin;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.class_8791;
-import net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacket;
+import net.minecraft.network.packet.c2s.common.ClientOptionsC2SPacket;
+import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +22,7 @@ public abstract class ServerPlayNetworkHandlerMixin implements ContextProvidingP
     @Shadow protected abstract GameProfile getProfile();
 
     @Unique
-    private class_8791 clientSettings;
+    private SyncedClientOptions clientSettings;
 
     @Override
     public @Nullable ServerPlayerEntity getPlayerForPacketTweaker() {
@@ -35,15 +35,15 @@ public abstract class ServerPlayNetworkHandlerMixin implements ContextProvidingP
     }
 
     @Override
-    public class_8791 getClientSettingsForPacketTweaker() {
+    public SyncedClientOptions getClientOptionsForPacketTweaker() {
         if (this.clientSettings == null) {
-            this.clientSettings = this.player.method_53823();
+            this.clientSettings = this.player.getClientOptions();
         }
         return this.clientSettings;
     }
 
-    @Inject(method = "onClientSettings", at = @At("TAIL"))
-    private void clearCachedClientSettings(ClientSettingsC2SPacket clientSettingsC2SPacket, CallbackInfo ci) {
+    @Inject(method = "onClientOptions", at = @At("TAIL"))
+    private void clearCachedClientSettings(ClientOptionsC2SPacket clientSettingsC2SPacket, CallbackInfo ci) {
         this.clientSettings = null;
     }
 

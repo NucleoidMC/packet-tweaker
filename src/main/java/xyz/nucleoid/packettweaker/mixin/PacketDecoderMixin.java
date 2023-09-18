@@ -28,7 +28,7 @@ public class PacketDecoderMixin implements ConnectionHolder {
     @Inject(method = "decode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkState$PacketHandler;createPacket(ILnet/minecraft/network/PacketByteBuf;)Lnet/minecraft/network/packet/Packet;", shift = At.Shift.BEFORE))
     private void packetTweaker_setPacketContext(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list, CallbackInfo ci) {
         if (this.connection != null) {
-            PacketContext.setContext(this.connection.getPacketListener());
+            PacketContext.setContext(this.connection, null);
         }
     }
 

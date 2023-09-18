@@ -27,7 +27,7 @@ public class PacketEncoderMixin implements ConnectionHolder {
     @Inject(method = "encode(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;Lio/netty/buffer/ByteBuf;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/Packet;write(Lnet/minecraft/network/PacketByteBuf;)V", shift = At.Shift.BEFORE))
     private void packetTweaker_setPacketContext(ChannelHandlerContext channelHandlerContext, Packet<?> packet, ByteBuf byteBuf, CallbackInfo ci) {
         if (this.connection != null) {
-            PacketContext.setContext(this.connection.getPacketListener());
+            PacketContext.setContext(this.connection, packet);
         }
     }
 
