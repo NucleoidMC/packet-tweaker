@@ -4,11 +4,11 @@
   "package": "xyz.nucleoid.packettweaker.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "ClientConnectionMixin",
     "PacketDecoderMixin",
     "PacketEncoderMixin",
     "PacketListenerMixin",
     "ServerConfigurationNetworkHandlerMixin",
-    "ServerNetworkIoAcceptorMixin",
     "ServerPlayNetworkHandlerMixin"
   ],
   "injectors": {
