@@ -6,7 +6,7 @@
   "mixins": [
     "ClientConnectionMixin",
     "PacketDecoderMixin",
-    "PacketEncoderMixin",
+    "EncoderHandlerMixin",
     "PacketListenerMixin",
     "ServerConfigurationNetworkHandlerMixin",
     "ServerPlayNetworkHandlerMixin"
