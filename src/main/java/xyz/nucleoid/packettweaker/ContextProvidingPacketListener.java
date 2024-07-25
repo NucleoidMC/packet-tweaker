@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 public interface ContextProvidingPacketListener {
     ContextProvidingPacketListener EMPTY = new ContextProvidingPacketListener() {};
+
     @Nullable
     default ServerPlayerEntity getPlayerForPacketTweaker() {
         return null;
@@ -31,29 +32,32 @@ public interface ContextProvidingPacketListener {
     @Nullable
     default ClientConnection getClientConnectionForPacketTweaker() { return null; };
 
-
-    @Nullable
-    static ServerPlayerEntity getPlayer(PacketListener listener) {
-        return ((ContextProvidingPacketListener) listener).getPlayerForPacketTweaker();
+    static ContextProvidingPacketListener of(@Nullable PacketListener listener) {
+        return listener != null ? ((ContextProvidingPacketListener) listener) : EMPTY;
     }
 
     @Nullable
-    static SyncedClientOptions getClientOptions(PacketListener listener) {
-        return ((ContextProvidingPacketListener) listener).getClientOptionsForPacketTweaker();
+    static ServerPlayerEntity getPlayer(@Nullable PacketListener listener) {
+        return of(listener).getPlayerForPacketTweaker();
     }
 
     @Nullable
-    static GameProfile getGameProfile(PacketListener listener) {
-        return ((ContextProvidingPacketListener) listener).getGameProfileForPacketTweaker();
+    static SyncedClientOptions getClientOptions(@Nullable PacketListener listener) {
+        return of(listener).getClientOptionsForPacketTweaker();
     }
 
     @Nullable
-    static RegistryWrapper.WrapperLookup getWrapperLookup(PacketListener listener) {
-        return ((ContextProvidingPacketListener) listener).getWrapperLookupForPacketTweaker();
+    static GameProfile getGameProfile(@Nullable PacketListener listener) {
+        return of(listener).getGameProfileForPacketTweaker();
     }
 
     @Nullable
-    static ClientConnection getClientConnection(PacketListener listener) {
-        return ((ContextProvidingPacketListener) listener).getClientConnectionForPacketTweaker();
+    static RegistryWrapper.WrapperLookup getWrapperLookup(@Nullable PacketListener listener) {
+        return of(listener).getWrapperLookupForPacketTweaker();
+    }
+
+    @Nullable
+    static ClientConnection getClientConnection(@Nullable PacketListener listener) {
+        return of(listener).getClientConnectionForPacketTweaker();
     }
 }
