@@ -4,146 +4,188 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
-import xyz.nucleoid.packettweaker.impl.ConnectionClientAttachment;
+import xyz.nucleoid.packettweaker.impl.*;
 
-public final class PacketContext {
-    private static final ThreadLocal<PacketContext> INSTANCE = ThreadLocal.withInitial(PacketContext::new);
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-    private ContextProvidingPacketListener target = ContextProvidingPacketListener.EMPTY;
-    @Nullable
-    private Packet<?> encodedPacket = null;
-    @Nullable
-    private ClientConnection connection = null;
-
-    public static PacketContext get() {
-        return INSTANCE.get();
+/**
+ * The general packet context. Might be full null or fully set.
+ * It should NEVER be stored as a static variable (unless you copy it first), as it can be changed at any point.
+ * The NotNull and NotNullWithPlayer are purely for api usage and don't guarantee they will stay that way
+ * if the no storage requirement isn't fulfilled.
+ */
+@ApiStatus.NonExtendable
+public interface PacketContext {
+    static PacketContext get() {
+        return MutableContext.get();
     }
 
-    public static void runWithContext(@Nullable ClientConnection connection, @Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Runnable runnable) {
-        PacketContext context = PacketContext.get();
-        var oldTarget = context.target;
-        var oldPacket = context.encodedPacket;
-        var oldConnection = context.connection;
-        context.target = ContextProvidingPacketListener.of(networkHandler);
-        context.encodedPacket = packet;
-        context.connection = connection;
-        runnable.run();
-        context.target = oldTarget;
-        context.encodedPacket = oldPacket;
-        context.connection = oldConnection;
+    static void runWithContext(@Nullable ClientConnection connection, @Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Runnable runnable) {
+        MutableContext.runWithContext(connection, networkHandler, packet, runnable);
     }
-    public static void runWithContext(@Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Runnable runnable) {
+
+    static void runWithContext(@Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Runnable runnable) {
         runWithContext(ContextProvidingPacketListener.getClientConnection(networkHandler), networkHandler, packet, runnable);
     }
 
-    public static void runWithContext(@Nullable PacketListener networkHandler, Runnable runnable) {
+    static void runWithContext(@Nullable PacketListener networkHandler, Runnable runnable) {
         runWithContext(networkHandler, null, runnable);
     }
 
-    public static PacketContext of(ServerPlayerEntity player) {
-        return of(player.networkHandler);
+    static <T> T supplyWithContext(@Nullable ClientConnection connection, @Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Supplier<T> supplier) {
+        return MutableContext.supplyWithContext(connection, networkHandler, packet, supplier);
     }
 
-    public static PacketContext of(PacketListener listener) {
-        var ctx = new PacketContext();
-        ctx.target = (ContextProvidingPacketListener) listener;
-        ctx.connection = ctx.target.getClientConnectionForPacketTweaker();
-        return ctx;
+    static <T> T supplyWithContext(@Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Supplier<T> supplier) {
+        return supplyWithContext(ContextProvidingPacketListener.getClientConnection(networkHandler), networkHandler, packet, supplier);
     }
 
-    public static PacketContext of(ClientConnection connection) {
-        var ctx = new PacketContext();
-        ctx.target = (ContextProvidingPacketListener) connection.getPacketListener();
-        ctx.connection = connection;
-        return ctx;
+    static <T> T supplyWithContext(@Nullable PacketListener networkHandler, Supplier<T> supplier) {
+        return supplyWithContext(networkHandler, null, supplier);
     }
 
-    public static PacketContext of() {
-        return new PacketContext();
+    static <T> T supplyWithContext(@Nullable ClientConnection connection, @Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Function<PacketContext, T> supplier) {
+        return MutableContext.supplyWithContext(connection, networkHandler, packet, supplier);
     }
 
-    @ApiStatus.Internal
-    public static void setContext(@Nullable ClientConnection connection, @Nullable Packet<?> packet) {
+    static <T> T supplyWithContext(@Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Function<PacketContext, T> supplier) {
+        return supplyWithContext(ContextProvidingPacketListener.getClientConnection(networkHandler), networkHandler, packet, supplier);
+    }
+
+    static <T> T supplyWithContext(@Nullable PacketListener networkHandler, Function<PacketContext, T> supplier) {
+        return supplyWithContext(networkHandler, null, supplier);
+    }
+
+    static NotNullWithPlayer create(ServerPlayerEntity player) {
+        return new StaticPlayContext(player.networkHandler);
+    }
+
+    static NotNullWithPlayer create(ServerPlayNetworkHandler listener) {
+        return new StaticPlayContext(listener);
+    }
+
+    static NotNull create(PacketListener listener) {
+        return new StaticPacketContext(ContextProvidingPacketListener.of(listener).getClientConnectionForPacketTweaker());
+    }
+
+    static NotNull create(ClientConnection connection) {
+        return new StaticPacketContext(connection);
+    }
+
+    static PacketContext create(RegistryWrapper.WrapperLookup lookup) {
+        return new LimitedContext(lookup, null, SyncedClientOptions.createDefault());
+    }
+
+    static PacketContext create() {
+        return EmptyContext.INSTANCE;
+    }
+
+    @Nullable
+    static <T> T getData(PacketListener listener, Key<T> key) {
+        return getData(((ContextProvidingPacketListener) listener).getClientConnectionForPacketTweaker(), key);
+    }
+
+    @Nullable
+    static <T> T setData(PacketListener listener, Key<T> key, @Nullable T data) {
+        return setData(((ContextProvidingPacketListener) listener).getClientConnectionForPacketTweaker(), key, data);
+    }
+
+    @Nullable
+    static <T> T getData(ClientConnection connection, Key<T> key) {
         if (connection == null) {
-            clearContext();
-            return;
+            return null;
         }
-
-        PacketContext context = PacketContext.get();
-        context.target = (ContextProvidingPacketListener) connection.getPacketListener();
-        context.connection = connection;
-        context.encodedPacket = packet;
-    }
-
-    @ApiStatus.Internal
-    public static void clearContext() {
-        PacketContext context = PacketContext.get();
-        context.target = ContextProvidingPacketListener.EMPTY;
-        context.connection = null;
-        context.encodedPacket = null;
+        return ((ConnectionClientAttachment) connection).packetTweaker$get(key);
     }
 
     @Nullable
-    @Deprecated
-    public ServerPlayerEntity getTarget() {
-        return this.getPlayer();
+    static <T> T setData(ClientConnection connection, Key<T> key, @Nullable T data) {
+        if (connection == null) {
+            return null;
+        }
+        return ((ConnectionClientAttachment) connection).packetTweaker$set(key, data);
+    }
+    @Nullable ServerPlayerEntity getPlayer();
+
+    @Nullable SyncedClientOptions getClientOptions();
+
+    @Nullable GameProfile getGameProfile();
+
+    @Nullable RegistryWrapper.WrapperLookup getRegistryWrapperLookup();
+
+    ContextProvidingPacketListener getPacketListener();
+
+    @Nullable PacketListener getBackingPacketListener();
+
+    @Nullable ClientConnection getClientConnection();
+
+    @Nullable
+    default <T> T getData(Key<T> key) {
+        return PacketContext.getData(this.getClientConnection(), key);
     }
 
     @Nullable
-    public ServerPlayerEntity getPlayer() {
-        return this.target.getPlayerForPacketTweaker();
+    default <T> T setData(Key<T> key, @Nullable T data) {
+        return PacketContext.setData(this.getClientConnection(), key, data);
     }
-    @Nullable
-    public SyncedClientOptions getClientOptions() {
-        return this.target.getClientOptionsForPacketTweaker();
-    }
-    @Nullable
-    public GameProfile getGameProfile() {
-        return this.target.getGameProfileForPacketTweaker();
-    }
+    @Nullable Packet<?> getEncodedPacket();
+
 
     @Nullable
-    public RegistryWrapper.WrapperLookup getRegistryWrapperLookup() {
-        return this.target.getWrapperLookupForPacketTweaker();
-    }
-
-    public ContextProvidingPacketListener getPacketListener() {
-        return this.target;
-    }
-
+    NotNull asNotNull();
     @Nullable
-    public PacketListener getBackingPacketListener() {
-        return this.target != ContextProvidingPacketListener.EMPTY ? (PacketListener) this.target : null;
+    PacketContext.NotNullWithPlayer asNotNullWithPlayer();
+
+    PacketContext copy();
+
+
+    /**
+     * Purely for API usage, should never be storied statically unless copied beforehand.
+     * Do not use instance of to check for this!
+     */
+    @ApiStatus.NonExtendable
+    interface NotNullWithPlayer extends NotNull {
+        @Override
+        ServerPlayerEntity getPlayer();
+        @Override
+        SyncedClientOptions getClientOptions();
+        @Override
+        GameProfile getGameProfile();
+
+        @Override
+        NotNullWithPlayer copy();
     }
 
-    @Nullable
-    public ClientConnection getClientConnection() {
-        return this.connection;
+    /**
+     * Purely for API usage, should never be storied statically unless copied beforehand.
+     * Do not use instance of to check for this!
+     */
+    @ApiStatus.NonExtendable
+    interface NotNull extends PacketContext {
+        @Override
+        RegistryWrapper.WrapperLookup getRegistryWrapperLookup();
+        @Override
+        ContextProvidingPacketListener getPacketListener();
+        @Override
+        PacketListener getBackingPacketListener();
+        @Override
+        ClientConnection getClientConnection();
+
+        @Override
+        NotNull copy();
     }
 
-    @Nullable
-    public <T> T getData(Key<T> key) {
-        return getData(this.connection, key);
-    }
 
-    @Nullable
-    public <T> T setData(Key<T> key, @Nullable T data) {
-        return setData(this.connection, key, data);
-    }
-
-    @Nullable
-    public Packet<?> getEncodedPacket() {
-        return this.encodedPacket;
-    }
-
-    public static final class Key<T> {
+    final class Key<T> {
         private final String id;
+
         private Key(String id) {
             this.id = id;
         }
@@ -154,34 +196,33 @@ public final class PacketContext {
 
         @Override
         public String toString() {
-            return "Key[" + this.id +']';
+            return "Key[" + this.id + ']';
         }
     }
 
-    @Nullable
-    public static <T> T getData(PacketListener listener, Key<T> key) {
-        return getData(((ContextProvidingPacketListener) listener).getClientConnectionForPacketTweaker(), key);
+    @Deprecated
+    static PacketContext of(ServerPlayerEntity player) {
+        return create(player.networkHandler);
+    }
+
+    @Deprecated
+    static PacketContext of(PacketListener listener) {
+        return create(listener);
+    }
+
+    @Deprecated
+    static PacketContext of(ClientConnection connection) {
+        return create(connection);
+    }
+
+    @Deprecated
+    static PacketContext of() {
+        return create();
     }
 
     @Nullable
-    public static  <T> T setData(PacketListener listener, Key<T> key, @Nullable T data) {
-        return setData(((ContextProvidingPacketListener) listener).getClientConnectionForPacketTweaker(), key, data);
-
-    }
-
-    @Nullable
-    public static  <T> T getData(ClientConnection connection, Key<T> key) {
-        if (connection == null) {
-            return null;
-        }
-        return ((ConnectionClientAttachment) connection).packetTweaker$get(key);
-    }
-
-    @Nullable
-    public static  <T> T setData(ClientConnection connection, Key<T> key, @Nullable T data) {
-        if (connection == null) {
-            return null;
-        }
-        return ((ConnectionClientAttachment) connection).packetTweaker$set(key, data);
+    @Deprecated
+    default ServerPlayerEntity getTarget() {
+        return this.getPlayer();
     }
 }
