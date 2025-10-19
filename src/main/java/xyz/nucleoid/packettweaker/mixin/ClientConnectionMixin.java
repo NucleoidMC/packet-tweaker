@@ -2,8 +2,8 @@ package xyz.nucleoid.packettweaker.mixin;
 
 import io.netty.channel.Channel;
 import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkState;
 import net.minecraft.network.listener.PacketListener;
+import net.minecraft.network.state.NetworkState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -36,9 +36,9 @@ public class ClientConnectionMixin implements ConnectionClientAttachment {
     @Inject(method = "transitionInbound", at = @At("TAIL"))
     private <T extends PacketListener> void packetTweaker_initChannel(NetworkState<T> state, T packetListener, CallbackInfo ci) {
         var self = (ClientConnection) (Object) this;
-        ConnectionHolder encoder = (ConnectionHolder) this.channel.pipeline().get("encoder");
-        if (encoder != null) {
-            encoder.packet_tweaker$setConnection(self);
+        ConnectionHolder decoder = (ConnectionHolder) this.channel.pipeline().get("decoder");
+        if (decoder != null) {
+            decoder.packet_tweaker$setConnection(self);
         }
     }
 

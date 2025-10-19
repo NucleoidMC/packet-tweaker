@@ -117,7 +117,6 @@ public interface PacketContext {
     @Nullable SyncedClientOptions getClientOptions();
 
     @Nullable GameProfile getGameProfile();
-
     @Nullable RegistryWrapper.WrapperLookup getRegistryWrapperLookup();
 
     ContextProvidingPacketListener getPacketListener();
