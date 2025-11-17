@@ -36,7 +36,7 @@ public class ClientConnectionMixin implements ConnectionClientAttachment {
     @Inject(method = "transitionInbound", at = @At("TAIL"))
     private <T extends PacketListener> void packetTweaker_initChannel(NetworkState<T> state, T packetListener, CallbackInfo ci) {
         var self = (ClientConnection) (Object) this;
-        ConnectionHolder encoder = (ConnectionHolder) this.channel.pipeline().get("encoder");
+        ConnectionHolder encoder = (ConnectionHolder) this.channel.pipeline().get("decoder");
         if (encoder != null) {
             encoder.packet_tweaker$setConnection(self);
         }
