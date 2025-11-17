@@ -4,7 +4,6 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -33,10 +32,13 @@ public final class PacketContext {
         context.target = ContextProvidingPacketListener.of(networkHandler);
         context.encodedPacket = packet;
         context.connection = connection;
-        runnable.run();
-        context.target = oldTarget;
-        context.encodedPacket = oldPacket;
-        context.connection = oldConnection;
+        try {
+            runnable.run();
+        } finally {
+            context.target = oldTarget;
+            context.encodedPacket = oldPacket;
+            context.connection = oldConnection;
+        }
     }
     public static void runWithContext(@Nullable PacketListener networkHandler, @Nullable Packet<?> packet, Runnable runnable) {
         runWithContext(ContextProvidingPacketListener.getClientConnection(networkHandler), networkHandler, packet, runnable);
